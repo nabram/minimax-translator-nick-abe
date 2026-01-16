@@ -160,39 +160,27 @@ function setupSpeechRecognition() {
     };
     
     state.recognition.onresult = (event) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-        
-        // Track what we've already processed to avoid duplicates
+        // Get only new results since last event
+        const newResults = [];
         for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript.trim();
-            if (transcript === '') continue;
-            
-            if (event.results[i].isFinal) {
-                finalTranscript += transcript + ' ';
-            } else {
-                interimTranscript = transcript;
-            }
+            newResults.push({
+                transcript: event.results[i][0].transcript.trim(),
+                isFinal: event.results[i].isFinal
+            });
         }
         
-        // Only update if we have new final results
-        if (finalTranscript.trim()) {
-            // Add new final text to what we already have
-            const currentText = elements.sourceText.textContent.trim();
-            const newText = currentText + (currentText ? ' ' : '') + finalTranscript.trim();
-            elements.sourceText.textContent = newText;
+        // Process new results
+        for (const result of newResults) {
+            if (result.transcript === '') continue;
             
-            // Translate the NEW text only (not the accumulated text)
-            translateText(finalTranscript.trim());
-        }
-        
-        // Update with interim results (shows while speaking)
-        if (interimTranscript) {
-            const currentText = elements.sourceText.textContent.trim();
-            // Don't append interim - replace the last interim or add to end
-            if (currentText.endsWith(finalTranscript.trim())) {
-                // Replace the end with interim
-                elements.sourceText.textContent = currentText + ' ' + interimTranscript;
+            if (result.isFinal) {
+                // Final result - add to source text and translate
+                const currentText = elements.sourceText.textContent.trim();
+                const separator = currentText ? ' ' : '';
+                elements.sourceText.textContent = currentText + separator + result.transcript;
+                
+                // Translate this specific utterance
+                translateText(result.transcript);
             }
         }
     };
@@ -377,8 +365,12 @@ function handleTextInput() {
 async function translateText(text) {
     if (!text.trim()) return;
     
-    const sourceLang = CONFIG.SPEECH_LANGUAGES[state.currentLangPair].target;
-    const targetLang = CONFIG.SPEECH_LANGUAGES[state.currentLangPair].source === 'zh-CN' ? 'zh' : 'en';
+    // Get the correct language codes for the API
+    const langConfig = CONFIG.SPEECH_LANGUAGES[state.currentLangPair];
+    const sourceLang = langConfig.source === 'zh-CN' ? 'zh' : 'en';
+    const targetLang = langConfig.target === 'en' ? 'en' : 'zh';
+    
+    console.log('Translation request:', { text, sourceLang, targetLang, currentLangPair: state.currentLangPair });
     
     // Check offline cache first
     const cacheKey = `${sourceLang}:${targetLang}:${text}`;
