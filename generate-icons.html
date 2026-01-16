@@ -1,0 +1,110 @@
+/**
+ * Icon Generator for MiniMax Translator
+ * Open this file in a browser to generate all icon sizes
+ */
+
+const icons = [
+    { size: 72, name: 'icon-72.png' },
+    { size: 96, name: 'icon-96.png' },
+    { size: 128, name: 'icon-128.png' },
+    { size: 144, name: 'icon-144.png' },
+    { size: 152, name: 'icon-152.png' },
+    { size: 192, name: 'icon-192.png' },
+    { size: 384, name: 'icon-384.png' },
+    { size: 512, name: 'icon-512.png' }
+];
+
+function createIconCanvas(size) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    return canvas;
+}
+
+function drawIcon(ctx, size) {
+    const centerX = size / 2;
+    const centerY = size / 2;
+    
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, size, size);
+    gradient.addColorStop(0, '#4a90d9');
+    gradient.addColorStop(1, '#6c5ce7');
+    
+    // Background circle
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, size / 2 - size * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Border
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = size * 0.02;
+    ctx.stroke();
+    
+    // Text/Symbol
+    const fontSize = size * 0.4;
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Draw "中" for Chinese character
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('中', centerX, centerY);
+    
+    // Small "EN" indicator
+    const subFontSize = size * 0.15;
+    ctx.font = `bold ${subFontSize}px Arial`;
+    ctx.fillText('↔', centerX, centerY + size * 0.25);
+}
+
+function generateIcons() {
+    const container = document.getElementById('icons-container');
+    container.innerHTML = '';
+    
+    icons.forEach(({ size, name }) => {
+        const canvas = createIconCanvas(size);
+        const ctx = canvas.getContext('2d');
+        drawIcon(ctx, size);
+        
+        // Display canvas
+        const wrapper = document.createElement('div');
+        wrapper.className = 'icon-wrapper';
+        
+        const canvasDisplay = document.createElement('canvas');
+        canvasDisplay.width = size;
+        canvasDisplay.height = size;
+        canvasDisplay.style.width = '64px';
+        canvasDisplay.style.height = '64px';
+        const ctxDisplay = canvasDisplay.getContext('2d');
+        drawIcon(ctxDisplay, size);
+        wrapper.appendChild(canvasDisplay);
+        
+        // Download link
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = name;
+        link.textContent = `Download ${name}`;
+        link.style.display = 'block';
+        link.style.marginTop = '8px';
+        link.style.fontSize = '12px';
+        wrapper.appendChild(link);
+        
+        container.appendChild(wrapper);
+    });
+}
+
+function downloadAllIcons() {
+    icons.forEach(({ size, name }) => {
+        const canvas = createIconCanvas(size);
+        const ctx = canvas.getContext('2d');
+        drawIcon(ctx, size);
+        
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = name;
+        link.click();
+    });
+}
+
+// Generate on load
+window.addEventListener('DOMContentLoaded', generateIcons);
