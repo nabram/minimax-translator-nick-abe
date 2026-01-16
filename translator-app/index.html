@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#4a90d9">
+    <meta name="description" content="Real-time Chinese-English translator">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Translator">
+    <title>MiniMax Translator</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>MiniMax Translator</h1>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot online"></span>
+                <span class="status-text">Online</span>
+            </div>
+        </header>
+
+        <!-- Language Toggle -->
+        <div class="language-controls">
+            <button class="lang-btn active" data-lang="zh-en" id="zhEnBtn">
+                中文 → English
+            </button>
+            <button class="lang-btn" data-lang="en-zh" id="enZhBtn">
+                English → 中文
+            </button>
+        </div>
+
+        <!-- Translation Area - Side by Side -->
+        <div class="translation-area">
+            <!-- Source Panel (Left) -->
+            <div class="panel source-panel">
+                <div class="panel-header">
+                    <span class="lang-label" id="sourceLangLabel">中文</span>
+                    <button class="mic-btn" id="micBtn" aria-label="Start speaking">
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="currentColor" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                            <path fill="currentColor" d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="panel-content" id="sourceText" contenteditable="true" placeholder="Speak or type here..."></div>
+                <div class="panel-actions">
+                    <button class="action-btn" id="clearSource" aria-label="Clear text">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                    <button class="action-btn" id="speakSource" aria-label="Speak source text">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Target Panel (Right) -->
+            <div class="panel target-panel">
+                <div class="panel-header">
+                    <span class="lang-label" id="targetLangLabel">English</span>
+                    <button class="speak-btn" id="speakTarget" aria-label="Speak translation">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="panel-content" id="targetText"></div>
+                <div class="panel-actions">
+                    <button class="action-btn" id="copyTarget" aria-label="Copy translation">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Offline Indicator -->
+        <div class="offline-banner" id="offlineBanner">
+            <span>You're offline - Using cached translation</span>
+        </div>
+
+        <!-- Install Button (for PWA) -->
+        <button class="install-btn" id="installBtn" style="display: none;">
+            Install App
+        </button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="close-btn" id="closeSettings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label for="apiKey">MiniMax API Key:</label>
+                    <input type="password" id="apiKey" placeholder="Enter your API key">
+                </div>
+                <div class="setting-item">
+                    <label for="autoTranslate">
+                        <input type="checkbox" id="autoTranslate" checked>
+                        Auto-translate while typing
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="speechRate">Speech Rate:</label>
+                    <input type="range" id="speechRate" min="0.5" max="2" step="0.1" value="1">
+                    <span id="speechRateValue">1x</span>
+                </div>
+                <div class="setting-item">
+                    <button id="clearCache" class="btn-secondary">Clear Offline Cache</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Button -->
+    <button class="settings-btn" id="openSettings" aria-label="Open settings">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+            <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+        </svg>
+    </button>
+
+    <script src="app.js"></script>
+</body>
+</html>

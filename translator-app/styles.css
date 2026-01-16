@@ -1,0 +1,577 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #4a90d9;
+    --primary-dark: #3a7bc8;
+    --secondary-color: #6c5ce7;
+    --background: #f5f7fa;
+    --surface: #ffffff;
+    --text-primary: #2d3436;
+    --text-secondary: #636e72;
+    --border-color: #e1e8ed;
+    --success-color: #00b894;
+    --warning-color: #fdcb6e;
+    --error-color: #e74c3c;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --transition: all 0.3s ease;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--background);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+/* App Container */
+.app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    margin-bottom: 16px;
+}
+
+.app-header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Connection Status */
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--surface);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-dot.online {
+    background: var(--success-color);
+}
+
+.status-dot.offline {
+    background: var(--error-color);
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Language Controls */
+.language-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    justify-content: center;
+}
+
+.lang-btn {
+    padding: 10px 20px;
+    border: 2px solid var(--border-color);
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.lang-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.lang-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* Translation Area - Side by Side */
+.translation-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Panels */
+.panel {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.panel:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: #fafbfc;
+}
+
+.lang-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mic-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.mic-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+.mic-btn.listening {
+    background: var(--error-color);
+    animation: recording-pulse 1.5s infinite;
+}
+
+.mic-btn:disabled {
+    background: var(--border-color);
+    cursor: not-allowed;
+    transform: none;
+}
+
+@keyframes recording-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+    50% { box-shadow: 0 0 0 12px rgba(231, 76, 60, 0); }
+}
+
+.panel-content {
+    flex: 1;
+    padding: 16px;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    overflow-y: auto;
+    outline: none;
+    min-height: 200px;
+    word-wrap: break-word;
+}
+
+.panel-content:empty::before {
+    content: attr(placeholder);
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.panel-content[contenteditable="true"]:focus {
+    background: #f8fafc;
+}
+
+#targetText {
+    background: #f8fafc;
+    color: var(--text-primary);
+}
+
+.panel-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+    justify-content: flex-end;
+}
+
+.action-btn, .speak-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.action-btn:hover, .speak-btn:hover {
+    background: var(--background);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.speak-btn {
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+}
+
+.speak-btn:hover {
+    background: #5b4cdb;
+    color: white;
+}
+
+/* Offline Banner */
+.offline-banner {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--warning-color);
+    color: var(--text-primary);
+    padding: 10px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.offline-banner.show {
+    display: block;
+}
+
+/* Install Button */
+.install-btn {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    transition: var(--transition);
+}
+
+.install-btn:hover {
+    background: var(--primary-dark);
+    transform: translateX(-50%) translateY(-2px);
+}
+
+/* Settings Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.close-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: none;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.close-btn:hover {
+    background: var(--background);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.setting-item {
+    margin-bottom: 20px;
+}
+
+.setting-item label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+}
+
+.setting-item input[type="password"],
+.setting-item input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    outline: none;
+    transition: var(--transition);
+}
+
+.setting-item input[type="password"]:focus,
+.setting-item input[type="text"]:focus {
+    border-color: var(--primary-color);
+}
+
+.setting-item input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.setting-item input[type="range"] {
+    width: 100%;
+    margin-right: 10px;
+}
+
+.btn-secondary {
+    padding: 10px 16px;
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
+}
+
+/* Settings Button */
+.settings-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    z-index: 100;
+}
+
+.settings-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: rotate(90deg);
+}
+
+/* Loading State */
+.loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error State */
+.error {
+    color: var(--error-color);
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    background: #fdf2f2;
+    border-radius: var(--radius-sm);
+    margin-top: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .app-container {
+        padding: 12px;
+    }
+
+    .translation-area {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .panel {
+        min-height: 250px;
+    }
+
+    .panel-content {
+        font-size: 1rem;
+        min-height: 150px;
+    }
+
+    .language-controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .lang-btn {
+        flex: 1;
+        min-width: 140px;
+        text-align: center;
+    }
+
+    .app-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .settings-btn {
+        bottom: 16px;
+        right: 16px;
+    }
+
+    .install-btn {
+        bottom: 70px;
+    }
+}
+
+@media (max-width: 480px) {
+    .app-container {
+        padding: 8px;
+    }
+
+    .panel-content {
+        padding: 12px;
+        font-size: 0.95rem;
+    }
+
+    .lang-btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .connection-status {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #1a1a2e;
+        --surface: #16213e;
+        --text-primary: #eaeaea;
+        --text-secondary: #a0a0a0;
+        --border-color: #2d3748;
+    }
+
+    .panel-header {
+        background: #1a1a2e;
+    }
+
+    .panel-content[contenteditable="true"]:focus {
+        background: #1a1a2e;
+    }
+
+    #targetText {
+        background: #1a1a2e;
+    }
+}
+
+/* PWA Install Banner */
+@media (display-mode: standalone) {
+    .install-btn {
+        display: none !important;
+    }
+}
