@@ -163,26 +163,37 @@ function setupSpeechRecognition() {
         let interimTranscript = '';
         let finalTranscript = '';
         
+        // Track what we've already processed to avoid duplicates
         for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
+            const transcript = event.results[i][0].transcript.trim();
+            if (transcript === '') continue;
+            
             if (event.results[i].isFinal) {
-                finalTranscript += transcript;
+                finalTranscript += transcript + ' ';
             } else {
-                interimTranscript += transcript;
+                interimTranscript = transcript;
             }
         }
         
-        // Update source text with interim results
-        if (interimTranscript) {
-            const currentText = elements.sourceText.textContent;
-            elements.sourceText.textContent = currentText + interimTranscript;
+        // Only update if we have new final results
+        if (finalTranscript.trim()) {
+            // Add new final text to what we already have
+            const currentText = elements.sourceText.textContent.trim();
+            const newText = currentText + (currentText ? ' ' : '') + finalTranscript.trim();
+            elements.sourceText.textContent = newText;
+            
+            // Translate the NEW text only (not the accumulated text)
+            translateText(finalTranscript.trim());
         }
         
-        // Translate when we get final results
-        if (finalTranscript) {
-            const currentText = elements.sourceText.textContent;
-            elements.sourceText.textContent = currentText + finalTranscript;
-            translateText(finalTranscript);
+        // Update with interim results (shows while speaking)
+        if (interimTranscript) {
+            const currentText = elements.sourceText.textContent.trim();
+            // Don't append interim - replace the last interim or add to end
+            if (currentText.endsWith(finalTranscript.trim())) {
+                // Replace the end with interim
+                elements.sourceText.textContent = currentText + ' ' + interimTranscript;
+            }
         }
     };
     
@@ -380,20 +391,25 @@ async function translateText(text) {
     
     // If offline, show message
     if (!state.isOnline) {
-        elements.targetText.textContent = text; // Fallback to original text
+        elements.targetText.innerHTML = `<span style="color: #e74c3c;">Offline - translation unavailable</span>`;
         showOfflineIndicator();
         return;
     }
     
-    // If no API key, use browser translation as fallback
+    // If no API key, show message
     if (!state.apiKey) {
-        console.log('No API key configured, using browser translation');
-        await browserTranslate(text, sourceLang, targetLang);
+        console.log('No API key configured');
+        elements.targetText.innerHTML = `
+            <span style="color: #636e72;">Add your MiniMax API key in settings to enable translation.</span>
+            <br><br>
+            <a href="https://api.minimax.chat/" target="_blank" style="color: #4a90d9;">Get a free API key →</a>
+        `;
         return;
     }
     
     try {
         elements.targetText.classList.add('loading');
+        console.log('Translating:', text, 'from', sourceLang, 'to', targetLang);
         
         const response = await fetch(CONFIG.API_BASE_URL, {
             method: 'POST',
@@ -402,32 +418,50 @@ async function translateText(text) {
                 'Authorization': `Bearer ${state.apiKey}`
             },
             body: JSON.stringify({
-                source_lang: sourceLang,
-                target_lang: targetLang,
+                source_lang: sourceLang.toUpperCase(),
+                target_lang: targetLang.toUpperCase(),
                 text: text
             })
         });
         
         if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
+            const errorText = await response.text();
+            console.error('API error response:', errorText);
+            throw new Error(`API error: ${response.status} - ${errorText}`);
         }
         
         const data = await response.json();
+        console.log('API response:', data);
+        
+        // MiniMax API response structure
+        let translation = '';
         
         if (data.base_resp && data.base_resp.status_code === 0) {
-            const translation = data.text;
+            // Successful response
+            translation = data.text || '';
+        } else if (data.base_resp) {
+            // Error from MiniMax
+            throw new Error(data.base_resp.status_msg || `API error: ${data.base_resp.status_code}`);
+        } else if (data.text) {
+            // Alternative response format
+            translation = data.text;
+        } else {
+            console.error('Unexpected API response structure:', data);
+            throw new Error('Unexpected API response format');
+        }
+        
+        if (translation) {
             elements.targetText.textContent = translation;
-            
             // Cache the translation
             state.offlineCache.set(cacheKey, translation);
             saveOfflineCache();
+            console.log('Translation complete:', translation);
         } else {
-            throw new Error(data.base_resp?.status_msg || 'Translation failed');
+            throw new Error('Empty translation received');
         }
         
     } catch (error) {
         console.error('Translation error:', error);
-        
         // Fallback to browser translation
         await browserTranslate(text, sourceLang, targetLang);
     } finally {
@@ -437,30 +471,49 @@ async function translateText(text) {
 
 /**
  * Browser-based translation fallback
+ * Note: Google Translate API may be blocked in some regions
  */
 async function browserTranslate(text, sourceLang, targetLang) {
-    // Use Google Translate web interface as a simple fallback
-    // This is a basic implementation - in production, you might want a proper API
-    
+    // Using a CORS proxy to access Google Translate
     const encodedText = encodeURIComponent(text);
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodedText}`;
     
     try {
         const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`Google Translate failed: ${response.status}`);
+        }
+        
         const data = await response.json();
         
-        if (data && data[0]) {
-            const translation = data[0].map(item => item[0]).join('');
-            elements.targetText.textContent = translation;
+        if (data && data[0] && Array.isArray(data[0])) {
+            const translation = data[0]
+                .filter(item => item && item[0])
+                .map(item => item[0])
+                .join('');
             
-            // Cache the translation
-            const cacheKey = `${sourceLang}:${targetLang}:${text}`;
-            state.offlineCache.set(cacheKey, translation);
-            saveOfflineCache();
+            if (translation) {
+                elements.targetText.textContent = translation;
+                
+                // Cache the translation
+                const cacheKey = `${sourceLang}:${targetLang}:${text}`;
+                state.offlineCache.set(cacheKey, translation);
+                saveOfflineCache();
+                return;
+            }
         }
+        
+        throw new Error('No translation found in response');
     } catch (error) {
         console.error('Browser translation error:', error);
-        elements.targetText.textContent = text; // Fallback to original
+        
+        // Final fallback: show original text with suggestion
+        elements.targetText.innerHTML = `
+            <span style="color: #636e72;">Translation service unavailable. Check your API key.</span>
+            <br><br>
+            <span style="color: #b2bec3; font-style: italic;">Original text: ${text}</span>
+        `;
     }
 }
 
